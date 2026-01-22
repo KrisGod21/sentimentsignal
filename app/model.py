@@ -1,9 +1,21 @@
 from transformers import pipeline
 
-sentiment_model = pipeline("sentiment-analysis")
+_sentiment_model = None
+
+def get_model():
+    global _sentiment_model
+    if _sentiment_model is None:
+        _sentiment_model = pipeline(
+            "sentiment-analysis",
+            model="distilbert-base-uncased-finetuned-sst-2-english",
+            device=-1  # force CPU
+        )
+    return _sentiment_model
+
 
 def analyze_sentiment(texts: list[str]):
-    results = sentiment_model(texts)
+    model = get_model()
+    results = model(texts)
 
     pos = neg = neu = 0
     score_sum = 0
@@ -19,7 +31,7 @@ def analyze_sentiment(texts: list[str]):
             neu += 1
 
     total = len(results)
-    sentiment_score = int(((score_sum / total) + 1) * 50)  # 0–100 scale
+    sentiment_score = int(((score_sum / total) + 1) * 50)
 
     return {
         "sentiment_score": sentiment_score,
