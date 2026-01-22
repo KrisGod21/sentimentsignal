@@ -1,10 +1,8 @@
 from transformers import pipeline
 
-# LOAD MODEL ONCE (CRITICAL)
 sentiment_pipeline = pipeline(
     "sentiment-analysis",
-    model="distilbert/distilbert-base-uncased-finetuned-sst-2-english",
-    device=-1  # CPU only
+    model="distilbert-base-uncased-finetuned-sst-2-english"
 )
 
 def analyze_headlines(headlines):
