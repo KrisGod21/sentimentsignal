@@ -1,26 +1,29 @@
 from fastapi import FastAPI
 from app.schemas import SentimentRequest
-from app.model import analyze_sentiment
-from app.utils import get_signal
+from app.model import analyze_headlines
 
 app = FastAPI(title="SentimentSignal API")
 
+@app.get("/")
+def health():
+    return {"status": "API running"}
 
 @app.post("/analyze")
-def analyze(request: SentimentRequest):
-    sentiment = analyze_sentiment(request.headlines)
-    signal_data = get_signal(sentiment["sentiment_score"])
+def analyze(req: SentimentRequest):
+    results = analyze_headlines(req.headlines)
+
+    pos = sum(1 for r in results if r["label"] == "POSITIVE")
+    neg = sum(1 for r in results if r["label"] == "NEGATIVE")
+
+    if pos > neg:
+        signal = "BUY"
+    elif neg > pos:
+        signal = "SELL"
+    else:
+        signal = "HOLD"
 
     return {
-        "stock": request.stock,
-        "price": 2847.55,
-        "change": 1.62,
-        "sentiment_score": sentiment["sentiment_score"],
-        "signal": signal_data["signal"],
-        "signal_message": signal_data["message"],
-        "distribution": {
-            "positive": sentiment["positive"],
-            "neutral": sentiment["neutral"],
-            "negative": sentiment["negative"]
-        }
+        "stock": req.stock,
+        "signal": signal,
+        "sentiment_breakdown": results
     }
